@@ -78,10 +78,12 @@ namespace HyperBot.Modules
                 _ = Task.Run(async () =>
                     {
                         var pagerItems = _context.Pagers
-                            .Where(p => (p.Guild == null || p.Guild == args.Guild.Id) && p.Author != args.Author.Id);
+                            .Where(p => (p.Guild == null || p.Guild == args.Guild.Id) && p.Author != args.Author.Id)
+                            .OrderByDescending(p => p.Text.Length);
+                        var alreadySent = new HashSet<ulong>();
                         foreach (var item in pagerItems)
                         {
-                            if (args.Message.Content.Contains(item.Text))
+                            if (args.Message.Content.Contains(item.Text) && !alreadySent.Contains(item.Author))
                             {
                                 // This message matches a valid pager
                                 try
@@ -98,6 +100,7 @@ namespace HyperBot.Modules
                                         .Replace(item.Text, $"**{item.Text}**"));
                                     embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
                                     await channel.SendMessageAsync(embed);
+                                    alreadySent.Add(item.Author);
                                 }
                                 catch { }
                             }
