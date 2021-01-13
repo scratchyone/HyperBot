@@ -92,11 +92,11 @@ namespace HyperBot.Modules
                                     var channel = await member.CreateDmChannelAsync();
                                     var embed = new DiscordEmbedBuilder();
                                     embed.WithTitle($"Pager Matched in {args.Guild.Name}");
-                                    embed.WithUrl(args.Message.JumpLink);
                                     embed.WithAuthor((args.Author as DiscordMember).DisplayName, iconUrl: args.Author.AvatarUrl);
                                     embed.WithDescription(args.Message.Content
                                         .Replace("**", "")
                                         .Replace(item.Text, $"**{item.Text}**"));
+                                    embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
                                     await channel.SendMessageAsync(embed);
                                 }
                                 catch { }
