@@ -33,19 +33,6 @@ namespace HyperBot.Modules
                 Author = ctx.Message.Author.Id,
                 Text = text.Replace("\n", ""),
             };
-            // Check that user DMs are enabled
-            try
-            {
-                var dmChannel = ctx.Channel;
-                if (!ctx.Channel.IsPrivate) dmChannel = await ctx.Member.CreateDmChannelAsync();
-                await dmChannel.SendMessageAsync(HyperBot.Embeds.Success
-                    .WithTitle("Test Passed")
-                    .WithDescription("You have your DMs enabled! This means I will be able to send you pager alerts."));
-            }
-            catch
-            {
-                throw new UserError("Your DMs must be enabled for me to be able to send you pager alerts.");
-            }
             await _context.AddAsync(item);
             await _context.SaveChangesAsync();
             await ctx.RespondAsync(Embeds.Success.WithDescription($"Added pager item!"));
