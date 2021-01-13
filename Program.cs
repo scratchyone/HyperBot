@@ -70,8 +70,8 @@ namespace HyperBot
             {
                 Token = Configuration["Token"],
                 TokenType = TokenType.Bot,
-                MinimumLogLevel = LogLevel.Information
-
+                MinimumLogLevel = LogLevel.Information,
+                Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers
             });
             var services = new ServiceCollection()
                 .AddSingleton<DataContext>()
@@ -86,6 +86,8 @@ namespace HyperBot
             commands.RegisterCommands<MyFirstModule>();
             commands.RegisterCommands<PinboardModule>();
             commands.RegisterCommands<PrefixModule>();
+            commands.RegisterCommands<PagerModule>();
+            PagerModule.OnStart(discord, Configuration);
             commands.CommandErrored += (a, b) => HandleErrors(a, b, discord);
             var aTimer = new System.Timers.Timer(new TimeSpan(0, 30, 0).TotalMilliseconds);
             aTimer.Elapsed += (_, _) => UpdateStatus(discord);

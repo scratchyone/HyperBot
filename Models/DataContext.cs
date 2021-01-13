@@ -28,5 +28,6 @@ namespace HyperBot.Data
         }
         public DbSet<PinboardItem> PinboardItems { get; set; }
         public DbSet<Prefix> Prefixes { get; set; }
+        public DbSet<PagerItem> Pagers { get; set; }
     }
 }
