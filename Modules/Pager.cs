@@ -83,7 +83,7 @@ namespace HyperBot.Modules
                         var alreadySent = new HashSet<ulong>();
                         foreach (var item in pagerItems)
                         {
-                            if (args.Message.Content.Contains(item.Text) && !alreadySent.Contains(item.Author))
+                            if (args.Message.Content.ToLower().Contains(item.Text.ToLower()) && !alreadySent.Contains(item.Author))
                             {
                                 // This message matches a valid pager
                                 try
@@ -99,9 +99,9 @@ namespace HyperBot.Modules
                                             var embed = new DiscordEmbedBuilder();
                                             embed.WithTitle($"Pager Matched in {args.Guild.Name}");
                                             embed.WithAuthor((args.Author as DiscordMember).DisplayName, iconUrl: args.Author.AvatarUrl);
-                                            embed.WithDescription(args.Message.Content
+                                            embed.WithDescription(args.Message.Content.ToLower()
                                                 .Replace("**", "")
-                                                .Replace(item.Text, $"**{item.Text}**"));
+                                                .Replace(item.Text.ToLower(), $"**{item.Text.ToLower()}**"));
                                             embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
                                             await channel.SendMessageAsync(embed);
                                             alreadySent.Add(item.Author);
