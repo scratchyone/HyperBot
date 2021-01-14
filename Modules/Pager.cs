@@ -102,6 +102,7 @@ namespace HyperBot.Modules
                                             embed.WithDescription(args.Message.Content.ToLower()
                                                 .Replace("**", "")
                                                 .Replace(item.Text.ToLower(), $"**{item.Text.ToLower()}**"));
+                                            embed.WithFooter($"#{args.Channel.Name}");
                                             embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
                                             await channel.SendMessageAsync(embed);
                                             alreadySent.Add(item.Author);
