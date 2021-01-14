@@ -24,12 +24,12 @@ namespace HyperBot.Modules
         [Command("audio")]
         public async Task Audio(CommandContext ctx, [RemainingText] string url)
         {
-            await DownloadFlow(ctx, url, "mp3", "audio/mpeg");
+            DownloadFlow(ctx, url, "mp3", "audio/mpeg");
         }
         [Command("video")]
         public async Task Video(CommandContext ctx, [RemainingText] string url)
         {
-            await DownloadFlow(ctx, url, "mp4", "video/mp4");
+            DownloadFlow(ctx, url, "mp4", "video/mp4");
         }
         public async Task DownloadFlow(CommandContext ctx, string url, string extension, string contentType)
         {
