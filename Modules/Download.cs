@@ -41,6 +41,8 @@ namespace HyperBot.Modules
             youtubeDl.Options.FilesystemOptions.Output = filePath;
             if (Configuration["Cookies"] != null)
                 youtubeDl.Options.FilesystemOptions.Cookies = Configuration["Cookies"];
+            if (Configuration["UserAgent"] != null)
+                youtubeDl.Options.WorkaroundsOptions.UserAgent = Configuration["UserAgent"];
             if (extension == "mp3")
             {
                 youtubeDl.Options.PostProcessingOptions.ExtractAudio = true;
