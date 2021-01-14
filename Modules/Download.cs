@@ -39,7 +39,7 @@ namespace HyperBot.Modules
             var youtubeDl = new YoutubeDL();
             var filePath = $"./Downloads/{Guid.NewGuid()}.{extension}";
             youtubeDl.Options.FilesystemOptions.Output = filePath;
-            youtubeDl.Options.FilesystemOptions.Cookies = "cookies.txt";
+            youtubeDl.Options.FilesystemOptions.Cookies = "./cookies.txt";
             if (extension == "mp3")
             {
                 youtubeDl.Options.PostProcessingOptions.ExtractAudio = true;
@@ -56,7 +56,7 @@ namespace HyperBot.Modules
                 await ctx.RespondAsync(HyperBot.Embeds.Error.WithDescription($"Download failed: ```{message}```"));
                 youtubeDl.CancelDownload();
             };
-            await youtubeDl.DownloadAsync(url);
+            await youtubeDl.DownloadAsync();
             var maxFileSize = 7 * 1024 * 1024; // 7 MB
             using (var stream = File.OpenRead(filePath))
             {
