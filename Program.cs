@@ -87,6 +87,7 @@ namespace HyperBot
             commands.RegisterCommands<PinboardModule>();
             commands.RegisterCommands<PrefixModule>();
             commands.RegisterCommands<PagerModule>();
+            commands.RegisterCommands<DownloadModule>();
             PagerModule.OnStart(discord, Configuration);
             commands.CommandErrored += (a, b) => HandleErrors(a, b, discord);
             var aTimer = new System.Timers.Timer(new TimeSpan(0, 30, 0).TotalMilliseconds);
