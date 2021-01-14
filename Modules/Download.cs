@@ -39,8 +39,7 @@ namespace HyperBot.Modules
             var youtubeDl = new YoutubeDL();
             var filePath = $"./Downloads/{Guid.NewGuid()}.{extension}";
             youtubeDl.Options.FilesystemOptions.Output = filePath;
-            if (File.Exists("cookies.txt"))
-                youtubeDl.Options.FilesystemOptions.Cookies = "cookies.txt";
+            youtubeDl.Options.FilesystemOptions.Cookies = "cookies.txt";
             if (extension == "mp3")
             {
                 youtubeDl.Options.PostProcessingOptions.ExtractAudio = true;
