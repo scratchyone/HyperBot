@@ -35,7 +35,7 @@ namespace HyperBot.Modules
             };
             await _context.AddAsync(item);
             await _context.SaveChangesAsync();
-            await ctx.RespondAsync(Embeds.Success.WithDescription($"Added pager item!"));
+            await ctx.RespondAsync(Embeds.Success.WithDescription($"Added pager item! Your item will only trigger if you aren't active in the channel."));
         }
         [Command("remove"), Aliases("delete")]
         public async Task Remove(CommandContext ctx, [RemainingText] string text)
@@ -90,17 +90,23 @@ namespace HyperBot.Modules
                                 {
                                     var member = await args.Guild.GetMemberAsync(item.Author);
                                     var perms = member.PermissionsIn(args.Channel);
-                                    if (!perms.HasPermission(Permissions.ReadMessageHistory) || !perms.HasPermission(Permissions.AccessChannels)) continue;
-                                    var channel = await member.CreateDmChannelAsync();
-                                    var embed = new DiscordEmbedBuilder();
-                                    embed.WithTitle($"Pager Matched in {args.Guild.Name}");
-                                    embed.WithAuthor((args.Author as DiscordMember).DisplayName, iconUrl: args.Author.AvatarUrl);
-                                    embed.WithDescription(args.Message.Content
-                                        .Replace("**", "")
-                                        .Replace(item.Text, $"**{item.Text}**"));
-                                    embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
-                                    await channel.SendMessageAsync(embed);
-                                    alreadySent.Add(item.Author);
+                                    if (perms.HasPermission(Permissions.ReadMessageHistory) && perms.HasPermission(Permissions.AccessChannels))
+                                    {
+                                        var lastNMessages = await args.Channel.GetMessagesAsync(50);
+                                        if (!lastNMessages.Any(m => m.Author.Id == member.Id && m.Timestamp.AddMinutes(5) > DateTime.UtcNow))
+                                        {
+                                            var channel = await member.CreateDmChannelAsync();
+                                            var embed = new DiscordEmbedBuilder();
+                                            embed.WithTitle($"Pager Matched in {args.Guild.Name}");
+                                            embed.WithAuthor((args.Author as DiscordMember).DisplayName, iconUrl: args.Author.AvatarUrl);
+                                            embed.WithDescription(args.Message.Content
+                                                .Replace("**", "")
+                                                .Replace(item.Text, $"**{item.Text}**"));
+                                            embed.Description += $"\n\n[Jump]({args.Message.JumpLink})";
+                                            await channel.SendMessageAsync(embed);
+                                            alreadySent.Add(item.Author);
+                                        }
+                                    }
                                 }
                                 catch { }
                             }
