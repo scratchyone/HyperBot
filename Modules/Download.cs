@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using NYoutubeDL;
 using System.IO;
+using Google.Cloud.Storage.V1;
+
 
 namespace HyperBot.Modules
 {
@@ -22,22 +24,30 @@ namespace HyperBot.Modules
         [Command("audio")]
         public async Task Audio(CommandContext ctx, [RemainingText] string url)
         {
-            await DownloadFlow(ctx, url, "mp3");
+            await DownloadFlow(ctx, url, "mp3", "audio/mpeg");
         }
         [Command("video")]
         public async Task Video(CommandContext ctx, [RemainingText] string url)
         {
-            await DownloadFlow(ctx, url, "mp4");
+            await DownloadFlow(ctx, url, "mp4", "video/mp4");
         }
-        public async Task DownloadFlow(CommandContext ctx, string url, string extension)
+        public async Task DownloadFlow(CommandContext ctx, string url, string extension, string contentType)
         {
             if (url == null) throw new UserError("URL must be provided to this command");
             if (url.Length > 100) throw new UserError("URL must be less than or equal to 100 characters");
             await ctx.RespondAsync(Embeds.Info.WithDescription($"Starting download!"));
-            await ctx.TriggerTypingAsync();
             var youtubeDl = new YoutubeDL();
             var filePath = $"./Downloads/{Guid.NewGuid()}.{extension}";
             youtubeDl.Options.FilesystemOptions.Output = filePath;
+            if (extension == "mp3")
+            {
+                youtubeDl.Options.PostProcessingOptions.ExtractAudio = true;
+                youtubeDl.Options.PostProcessingOptions.AudioFormat = NYoutubeDL.Helpers.Enums.AudioFormat.mp3;
+            }
+            else
+            {
+                youtubeDl.Options.VideoFormatOptions.Format = NYoutubeDL.Helpers.Enums.VideoFormat.mp4;
+            }
             youtubeDl.VideoUrl = url;
             youtubeDl.StandardErrorEvent += async (e, message) =>
             {
@@ -45,16 +55,28 @@ namespace HyperBot.Modules
                 await ctx.RespondAsync(HyperBot.Embeds.Error.WithDescription($"Download failed: ```{message}```"));
                 youtubeDl.CancelDownload();
             };
-            try
+            await youtubeDl.DownloadAsync(url);
+            var maxFileSize = 7 * 1024 * 1024; // 7 MB
+            using (var stream = File.OpenRead(filePath))
             {
-                await youtubeDl.DownloadAsync(url);
-                var stream = File.OpenRead(filePath);
-                await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().WithFile(youtubeDl.Info.Title + $".{extension}", stream));
-                stream.Close();
+                if (stream.Length > maxFileSize)
+                {
+                    var storage = StorageClient.Create();
+                    var objectName = $"{youtubeDl.Info.Title}-{Guid.NewGuid()}.{extension}".Replace(" ", "_");
+                    var gFile = storage.UploadObject("hyperbotdownloads", objectName, contentType, stream);
+
+                    await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder()
+                        .WithEmbed(HyperBot.Embeds.Success
+                        .WithTitle("Downloaded!")
+                        .WithDescription("This link will expire in 30 days")));
+                    await ctx.Channel.SendMessageAsync($"https://storage.googleapis.com/hyperbotdownloads/{System.Uri.EscapeUriString(objectName)}");
+                }
+                else
+                {
+                    await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().WithFile($"{youtubeDl.Info.Title}.{extension}", stream));
+                }
             }
-            catch { }
             File.Delete(filePath);
         }
-
     }
 }
