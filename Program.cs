@@ -74,7 +74,7 @@ namespace HyperBot
                 Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers
             });
             var services = new ServiceCollection()
-                .AddSingleton<DataContext>()
+                .AddTransient<DataContext>()
                 .AddSingleton<IConfiguration>(Configuration)
                 .BuildServiceProvider();
 
