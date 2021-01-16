@@ -57,6 +57,9 @@ namespace HyperBot.Modules
         public async Task AddPronoun(CommandContext ctx, [RemainingText] string pronounSet)
         {
             if (pronounSet == null || pronounSet.Split("/").Count() != 5) throw new UserError("Must supply 5 / seperated pronouns");
+            var existingPronoun = context.Pronouns.FirstOrDefault(p => p.Set == pronounSet);
+            if (existingPronoun != null) throw new UserError("Pronoun set already exists");
+
             await context.AddAsync(new PronounSet
             {
                 Set = pronounSet
