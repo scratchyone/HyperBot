@@ -17,6 +17,8 @@ using System.Net;
 using System.Collections.Generic;
 using System.Net.Http;
 using HtmlAgilityPack;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HyperBot.Modules
 {
@@ -24,7 +26,6 @@ namespace HyperBot.Modules
     public class ServerProtectModule : Cog
     {
         public DataContext _context { private get; set; }
-        private static String[] ipGrabberURLs = new[] { "grabify.link", "bmwforum.co", "leancoding.co", "spottyfly.com", "stopify.co", "yoütu.be", "discörd.com", "minecräft.com", "freegiftcards.co", "disçordapp.com", "xda-developers.us", "quickmessage.us", "fortnight.space", "fortnitechat.site", "youshouldclick.us", "joinmy.site", "crabrave.pw", "xn--yotu-1ra.be", "xn--disordapp-s3a.com", "xn--minecrft-5za.com", "xn--discrd-zxa.com", "iplogger.org", "2no.co", "iplogger.com", "iplogger.ru", "yip.su", "curiouscat.club", "catsnthings.com", "www.ps3cfw.com", "blasze.tk", "api.grabify.link", "iplis.org", "02ip.ru", "iplogger.co", "iplogger.info", "ipgraber.ru", "lovebird.guru", "trulove.guru", "dateing.club", "otherhalf.life", "shrekis.life", "datasig.io", "datauth.io", "headshot.monster", "gaming-at-my.best", "programing.monster", "screenshare.host", "gamingfun.me", "ipgrabber.ru", "iplist.ru", "ezstat.ru", "yourmy.monster", "imageshare.best", "mypic.icu", "screenshot.best", "grabify.world", "grabify.icu", "progaming.monster", "catsnthing.com", "catsnthings.fun" };
 
         [Command("enable")]
         [RequireUserPermissions(Permissions.ManageMessages)]
@@ -106,6 +107,8 @@ namespace HyperBot.Modules
 
         new public static void OnStart(DiscordClient client, IConfiguration configuration)
         {
+            var serverProtectData = JsonSerializer.Deserialize<ServerProtectData>(File.ReadAllText("serverprotect_data.json"));
+            client.Logger.LogInformation($"Loaded {serverProtectData.IPGrabberURLs.Length} IP grabber urls and {serverProtectData.UnsafeFiles.Length} unsafe files");
             var _context = new DataContext();
             client.MessageCreated += (client, args) =>
             {
@@ -123,7 +126,7 @@ namespace HyperBot.Modules
                             {
                                 await foreach (var trace in TraceLink(url))
                                 {
-                                    var found = ipGrabberURLs.FirstOrDefault(ig => trace.Host == ig);
+                                    var found = serverProtectData.IPGrabberURLs.FirstOrDefault(ig => trace.Host == ig);
                                     if (found != null)
                                     {
                                         await args.Channel.SendMessageAsync(new DiscordMessageBuilder()
