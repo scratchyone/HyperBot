@@ -48,67 +48,61 @@ namespace HyperBot.Modules
             await _context.SaveChangesAsync();
             await ctx.RespondAsync(Embeds.Success.WithDescription($"Disabled ServerProtect!"));
         }
-        private async static Task<List<Uri>> TraceLink(String link)
+        private async static IAsyncEnumerable<Uri> TraceLink(String link)
         {
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             httpClientHandler.AllowAutoRedirect = false;
             HttpClient client = new HttpClient(httpClientHandler);
-            var allUrls = new List<Uri>();
-            allUrls.Add(new Uri(link));
+            yield return new Uri(link);
             var url = link;
             var redirectCounter = 0;
             while (true)
             {
-                try
+                if (redirectCounter > 15) yield break;
+                HttpResponseMessage response = await client.GetAsync(url);
+                Console.WriteLine(response.StatusCode);
+                var doc = new HtmlDocument();
+                doc.LoadHtml(await response.Content.ReadAsStringAsync());
+                //Console.WriteLine(await response.Content.ReadAsStringAsync());
+                var linksInPage = doc.DocumentNode.SelectNodes("//a");
+                Console.WriteLine(linksInPage);
+                if (linksInPage != null)
                 {
-                    if (redirectCounter > 15) return allUrls;
-                    HttpResponseMessage response = await client.GetAsync(url);
-                    Console.WriteLine(response.StatusCode);
-                    var doc = new HtmlDocument();
-                    doc.LoadHtml(await response.Content.ReadAsStringAsync());
-                    //Console.WriteLine(await response.Content.ReadAsStringAsync());
-                    var linksInPage = doc.DocumentNode.SelectNodes("//a");
-                    Console.WriteLine(linksInPage);
-                    if (linksInPage != null)
+                    foreach (var aTag in linksInPage)
                     {
-                        foreach (var aTag in linksInPage)
+                        if (aTag.Attributes.Contains("href"))
                         {
-                            if (aTag.Attributes.Contains("href"))
+                            Uri href = null;
+                            try
                             {
-                                try
-                                {
-                                    Console.WriteLine(aTag.Attributes["href"].Value);
-                                    allUrls.Add(new Uri(aTag.Attributes["href"].Value));
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e);
-                                }
+                                href = new Uri(aTag.Attributes["href"].Value);
                             }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+                            if (href != null) yield return href;
                         }
                     }
-                    if (response.StatusCode == HttpStatusCode.Moved ||
-                        response.StatusCode == HttpStatusCode.MovedPermanently ||
-                        response.StatusCode == HttpStatusCode.Redirect ||
-                        response.StatusCode == HttpStatusCode.RedirectKeepVerb ||
-                        response.StatusCode == HttpStatusCode.PermanentRedirect ||
-                        response.StatusCode == HttpStatusCode.TemporaryRedirect)
-                    {
-                        allUrls.Add(response.Headers.Location);
-                        url = response.Headers.Location.ToString();
-                        redirectCounter++;
-                    }
-                    else
-                    {
-                        break;
-                    }
                 }
-                catch (Exception e)
+                if (response.StatusCode == HttpStatusCode.Moved ||
+                    response.StatusCode == HttpStatusCode.MovedPermanently ||
+                    response.StatusCode == HttpStatusCode.Redirect ||
+                    response.StatusCode == HttpStatusCode.RedirectKeepVerb ||
+                    response.StatusCode == HttpStatusCode.PermanentRedirect ||
+                    response.StatusCode == HttpStatusCode.TemporaryRedirect)
                 {
+                    yield return response.Headers.Location;
+                    url = response.Headers.Location.ToString();
+                    redirectCounter++;
+                }
+                else
+                {
+                    break;
                 }
             }
-            return allUrls;
         }
+
         new public static void OnStart(DiscordClient client, IConfiguration configuration)
         {
             var _context = new DataContext();
@@ -120,13 +114,13 @@ namespace HyperBot.Modules
                         if (args.Author.Id == client.CurrentUser.Id) return;
                         if (enabledInGuild)
                         {
-                            // Begin ServerProtect scans
-                            Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
-                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                        // Begin ServerProtect scans
+                        Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+                            RegexOptions.Compiled | RegexOptions.IgnoreCase);
                             var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value);
                             foreach (var url in urls)
                             {
-                                foreach (var trace in await TraceLink(url))
+                                await foreach (var trace in TraceLink(url))
                                 {
                                     var found = ipGrabberURLs.FirstOrDefault(ig => trace.Host == ig);
                                     if (found != null)
