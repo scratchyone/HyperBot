@@ -27,7 +27,7 @@ namespace HyperBot.Modules
         private static String[] ipGrabberURLs = new[] { "grabify.link", "bmwforum.co", "leancoding.co", "spottyfly.com", "stopify.co", "yoütu.be", "discörd.com", "minecräft.com", "freegiftcards.co", "disçordapp.com", "xda-developers.us", "quickmessage.us", "fortnight.space", "fortnitechat.site", "youshouldclick.us", "joinmy.site", "crabrave.pw", "xn--yotu-1ra.be", "xn--disordapp-s3a.com", "xn--minecrft-5za.com", "xn--discrd-zxa.com", "iplogger.org", "2no.co", "iplogger.com", "iplogger.ru", "yip.su", "curiouscat.club", "catsnthings.com", "www.ps3cfw.com", "blasze.tk", "api.grabify.link", "iplis.org", "02ip.ru", "iplogger.co", "iplogger.info", "ipgraber.ru", "lovebird.guru", "trulove.guru", "dateing.club", "otherhalf.life", "shrekis.life", "datasig.io", "datauth.io", "headshot.monster", "gaming-at-my.best", "programing.monster", "screenshare.host", "gamingfun.me", "ipgrabber.ru", "iplist.ru", "ezstat.ru", "yourmy.monster", "imageshare.best", "mypic.icu", "screenshot.best", "grabify.world", "grabify.icu", "progaming.monster", "catsnthing.com", "catsnthings.fun" };
 
         [Command("enable")]
-        [RequirePermissions(Permissions.ManageMessages)]
+        [RequireUserPermissions(Permissions.ManageMessages)]
         public async Task Enable(CommandContext ctx)
         {
             if (_context.ServerProtectGuilds.Where(sp => sp.Guild == ctx.Guild.Id).Any()) throw new UserError("ServerProtect already enabled for this server");
@@ -40,6 +40,7 @@ namespace HyperBot.Modules
             await ctx.RespondAsync(Embeds.Success.WithDescription($"Enabled ServerProtect. HyperBot will start monitoring all messages in this server for dangerous content."));
         }
         [Command("disable")]
+        [RequireUserPermissions(Permissions.ManageMessages)]
         public async Task Disable(CommandContext ctx)
         {
             var item = _context.ServerProtectGuilds.Where(i => i.Guild == ctx.Guild.Id).SingleOrDefault();
@@ -114,9 +115,9 @@ namespace HyperBot.Modules
                         if (args.Author.Id == client.CurrentUser.Id) return;
                         if (enabledInGuild)
                         {
-                        // Begin ServerProtect scans
-                        Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
-                            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                            // Begin ServerProtect scans
+                            Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
                             var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value);
                             foreach (var url in urls)
                             {
