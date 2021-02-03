@@ -37,7 +37,7 @@ namespace HyperBot.Modules
             };
             await _context.AddAsync(item);
             await _context.SaveChangesAsync();
-            await ctx.RespondAsync(Embeds.Success.WithDescription($"Enabled ServerProtect. HyperBot will start monitoring all messages in this server for dangerous content."));
+            await ctx.RespondAsync(Embeds.Success.WithDescription($"Enabled ServerProtect. HyperBot will scan all new messages in this server and delete any that contain dangerous content."));
         }
         [Command("disable")]
         [RequireUserPermissions(Permissions.ManageMessages)]
