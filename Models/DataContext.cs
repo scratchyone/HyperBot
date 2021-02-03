@@ -30,5 +30,7 @@ namespace HyperBot.Data
         public DbSet<Prefix> Prefixes { get; set; }
         public DbSet<PagerItem> Pagers { get; set; }
         public DbSet<PronounSet> Pronouns { get; set; }
+        public DbSet<ServerProtectGuild> ServerProtectGuilds { get; set; }
+
     }
 }

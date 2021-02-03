@@ -6,10 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00774" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00774" />
-    <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00774" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00786" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00786" />
+    <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.0-nightly-00786" />
     <PackageReference Include="Google.Cloud.Storage.V1" Version="3.3.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.30" />
     <PackageReference Include="Lifti.Core" Version="2.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

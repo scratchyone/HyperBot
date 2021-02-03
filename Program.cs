@@ -74,7 +74,7 @@ namespace HyperBot
                 Intents = DiscordIntents.AllUnprivileged | DiscordIntents.GuildMembers
             });
             var services = new ServiceCollection()
-                .AddTransient<DataContext>()
+                .AddSingleton<DataContext>()
                 .AddSingleton<IConfiguration>(Configuration)
                 .BuildServiceProvider();
 
@@ -89,6 +89,8 @@ namespace HyperBot
             commands.RegisterCommands<PagerModule>();
             commands.RegisterCommands<DownloadModule>();
             commands.RegisterCommands<PronounModule>();
+            commands.RegisterCommands<ServerProtectModule>();
+            ServerProtectModule.OnStart(discord, Configuration);
             PagerModule.OnStart(discord, Configuration);
             commands.CommandErrored += (a, b) => HandleErrors(a, b, discord);
             var aTimer = new System.Timers.Timer(new TimeSpan(0, 30, 0).TotalMilliseconds);
