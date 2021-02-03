@@ -19,6 +19,9 @@ using System.Net.Http;
 using HtmlAgilityPack;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Security.Cryptography;
+using System.Text;
+using Humanizer;
 
 namespace HyperBot.Modules
 {
@@ -50,24 +53,103 @@ namespace HyperBot.Modules
             await _context.SaveChangesAsync();
             await ctx.RespondAsync(Embeds.Success.WithDescription($"Disabled ServerProtect!"));
         }
-        private async static IAsyncEnumerable<Uri> TraceLink(String link)
+        [Command("stats")]
+        public async Task Stats(CommandContext ctx)
+        {
+            var totalIpGrabbers = _context.IPGrabberUrls.Count();
+            var totalUnsafeFiles = _context.UnsafeFiles.Count();
+            await ctx.RespondAsync(Embeds.Info.AddField("IP Grabber URLs", $"HyperBot has {"IP grabber URLs".ToQuantity(totalIpGrabbers)} in its security dataset", true)
+                .AddField("Unsafe Files", $"HyperBot has {"unsafe file hashes".ToQuantity(totalUnsafeFiles)} in its security dataset", true));
+        }
+
+        [Command("savehashfromurl")]
+        [RequireOwner]
+        public async Task SaveHashFromUrl(CommandContext ctx, string url, [RemainingText] string description)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                HttpClient client = new HttpClient();
+                HttpResponseMessage response = await client.GetAsync(url);
+                var hash = GetHash(sha256Hash, await response.Content.ReadAsByteArrayAsync());
+                var alreadyInDb = _context.UnsafeFiles.Where(sp => sp.Hash == hash).SingleOrDefault();
+                if (alreadyInDb != null)
+                {
+                    _context.Remove(alreadyInDb);
+                    await _context.AddAsync(new ServerProtectUnsafeFile
+                    {
+                        Description = description,
+                        Hash = hash
+                    });
+                    await _context.SaveChangesAsync();
+                    await ctx.RespondAsync(Embeds.Success.WithDescription($"Updated hash ({hash}) in the database!"));
+
+                }
+                else
+                {
+                    await (_context.AddAsync(new ServerProtectUnsafeFile
+                    {
+                        Description = description,
+                        Hash = hash
+                    }));
+                    await _context.SaveChangesAsync();
+                    await ctx.RespondAsync(Embeds.Success.WithDescription($"Saved hash ({hash}) to the database!"));
+                }
+            }
+        }
+        [Command("saveipgrabbers")]
+        [RequireOwner]
+        public async Task SaveIPGrabbers(CommandContext ctx, [RemainingText] string domainsString)
+        {
+            var domains = domainsString.Split(" ");
+            var skippedDomains = new List<String>();
+            foreach (var domain in domains)
+            {
+                if (_context.IPGrabberUrls.Where(url => url.Domain == domain).Any()) skippedDomains.Add(domain);
+                else await _context.AddAsync(new IPGrabberUrl { Domain = domain });
+            }
+            await _context.SaveChangesAsync();
+            if (domains.Length - skippedDomains.Count > 0)
+                await ctx.RespondAsync(Embeds.Success.WithDescription($"Saved {"domains".ToQuantity(domains.Length - skippedDomains.Count)} to the database!"));
+            if (skippedDomains.Count > 0) await ctx.RespondAsync(
+                Embeds.Warning.WithDescription($"Skipped {skippedDomains.Humanize()}, already in database."));
+
+        }
+
+        private static string GetHash(HashAlgorithm hashAlgorithm, byte[] input)
+        {
+
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = hashAlgorithm.ComputeHash(input);
+
+            // Create a new Stringbuilder to collect the bytes
+            // and create a string.
+            var sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data
+            // and format each one as a hexadecimal string.
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+
+        private async static IAsyncEnumerable<(Uri, HttpContent)> TraceLink(String link)
         {
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             httpClientHandler.AllowAutoRedirect = false;
             HttpClient client = new HttpClient(httpClientHandler);
-            yield return new Uri(link);
             var url = link;
             var redirectCounter = 0;
             while (true)
             {
                 if (redirectCounter > 15) yield break;
                 HttpResponseMessage response = await client.GetAsync(url);
-                Console.WriteLine(response.StatusCode);
                 var doc = new HtmlDocument();
                 doc.LoadHtml(await response.Content.ReadAsStringAsync());
-                //Console.WriteLine(await response.Content.ReadAsStringAsync());
                 var linksInPage = doc.DocumentNode.SelectNodes("//a");
-                Console.WriteLine(linksInPage);
                 if (linksInPage != null)
                 {
                     foreach (var aTag in linksInPage)
@@ -83,10 +165,11 @@ namespace HyperBot.Modules
                             {
                                 Console.WriteLine(e);
                             }
-                            if (href != null) yield return href;
+                            if (href != null) yield return (href, null);
                         }
                     }
                 }
+                yield return (new Uri(url), response.Content);
                 if (response.StatusCode == HttpStatusCode.Moved ||
                     response.StatusCode == HttpStatusCode.MovedPermanently ||
                     response.StatusCode == HttpStatusCode.Redirect ||
@@ -94,7 +177,6 @@ namespace HyperBot.Modules
                     response.StatusCode == HttpStatusCode.PermanentRedirect ||
                     response.StatusCode == HttpStatusCode.TemporaryRedirect)
                 {
-                    yield return response.Headers.Location;
                     url = response.Headers.Location.ToString();
                     redirectCounter++;
                 }
@@ -104,11 +186,31 @@ namespace HyperBot.Modules
                 }
             }
         }
+        private static async Task HandlePossiblyUnsafeFile(DiscordMessage message, HttpContent content, DataContext _context)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                var hash = GetHash(sha256Hash, await content.ReadAsByteArrayAsync());
+                var found = _context.UnsafeFiles.Where(sp => sp.Hash == hash).SingleOrDefault();
+                if (found != null)
+                {
+                    try
+                    {
+                        await message.DeleteAsync();
+                    }
+                    catch (Exception e) { }
+                    await message.Channel.SendMessageAsync(new DiscordMessageBuilder()
+                        .WithEmbed(Embeds.Warning.WithTitle("Warning! Unsafe File Detected!")
+                        .WithDescription($"The previous (now deleted) message by {message.Author.Mention} contains a link that points to an unsafe file.")
+                        .AddField("Description", found.Description)
+                        .WithFooter("Protected by ServerProtect")));
+                }
+            }
+            return;
+        }
 
         new public static void OnStart(DiscordClient client, IConfiguration configuration)
         {
-            var serverProtectData = JsonSerializer.Deserialize<ServerProtectData>(File.ReadAllText("serverprotect_data.json"));
-            client.Logger.LogInformation($"Loaded {serverProtectData.IPGrabberURLs.Length} IP grabber urls and {serverProtectData.UnsafeFiles.Length} unsafe files");
             var _context = new DataContext();
             client.MessageCreated += (client, args) =>
             {
@@ -118,24 +220,43 @@ namespace HyperBot.Modules
                         if (args.Author.Id == client.CurrentUser.Id) return;
                         if (enabledInGuild)
                         {
-                            // Begin ServerProtect scans
-                            Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
-                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                            var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value);
-                            foreach (var url in urls)
+                            try
                             {
-                                await foreach (var trace in TraceLink(url))
+                                // Begin ServerProtect scans
+                                Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+                                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                                var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value);
+                                foreach (var url in urls)
                                 {
-                                    var found = serverProtectData.IPGrabberURLs.FirstOrDefault(ig => trace.Host == ig);
-                                    if (found != null)
+                                    var alreadyTriggeredIPGrabberWarning = false;
+                                    await foreach ((var trace, var content) in TraceLink(url))
                                     {
-                                        await args.Channel.SendMessageAsync(new DiscordMessageBuilder()
-                                            .WithEmbed(Embeds.Warning.WithTitle("Warning! IP Grabber Link Detected!")
-                                                .WithDescription($"This message contains a link that points to {found}, a known IP grabber domain."))
-                                            .WithReply(args.Message.Id));
-                                        break;
+                                        var found = _context.IPGrabberUrls.FirstOrDefault(ig => trace.Host == ig.Domain);
+                                        if (found != null && !alreadyTriggeredIPGrabberWarning)
+                                        {
+                                            await args.Channel.SendMessageAsync(new DiscordMessageBuilder()
+                                                .WithEmbed(Embeds.Warning.WithTitle("Warning! IP Grabber Link Detected!")
+                                                    .WithDescription($"This message contains a link that points to {found.Domain}, a known IP grabber domain.")
+                                                    .WithFooter("Protected by ServerProtect"))
+                                                .WithReply(args.Message.Id));
+                                            alreadyTriggeredIPGrabberWarning = true;
+                                        }
+                                        if (content != null)
+                                        {
+                                            await HandlePossiblyUnsafeFile(args.Message, content, _context);
+                                        }
                                     }
                                 }
+                                foreach (var attachment in args.Message.Attachments)
+                                {
+                                    HttpClient client = new HttpClient();
+                                    HttpResponseMessage response = await client.GetAsync(attachment.Url);
+                                    await HandlePossiblyUnsafeFile(args.Message, response.Content, _context);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                client.Logger.LogError(e.ToString());
                             }
                         }
                     });

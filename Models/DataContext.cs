@@ -31,6 +31,8 @@ namespace HyperBot.Data
         public DbSet<PagerItem> Pagers { get; set; }
         public DbSet<PronounSet> Pronouns { get; set; }
         public DbSet<ServerProtectGuild> ServerProtectGuilds { get; set; }
+        public DbSet<ServerProtectUnsafeFile> UnsafeFiles { get; set; }
+        public DbSet<IPGrabberUrl> IPGrabberUrls { get; set; }
 
     }
 }

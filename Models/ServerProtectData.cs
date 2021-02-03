@@ -1,20 +1,18 @@
 using System;
-using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 namespace HyperBot.Models
 {
-    public class ServerProtectData
-    {
-        [JsonPropertyName("unsafeFiles")]
-        public ServerProtectUnsafeFile[] UnsafeFiles { get; set; }
-        [JsonPropertyName("ipGrabberUrls")]
-        public String[] IPGrabberURLs { get; set; }
-    }
     public class ServerProtectUnsafeFile
     {
-        [JsonPropertyName("description")]
-        public string Description;
+        [Key]
+        public string Hash { get; set; }
+        public string Description { get; set; }
 
-        [JsonPropertyName("hash")]
-        public string Hash;
+    }
+    public class IPGrabberUrl
+    {
+        [Key]
+        public string Domain { get; set; }
     }
 }
