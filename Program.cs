@@ -98,6 +98,7 @@ namespace HyperBot
             aTimer.Start();
             discord.Ready += (client, ready) =>
            {
+               client.Logger.LogInformation("Connected to discord");
                UpdateStatus(client);
                return Task.CompletedTask;
            };
