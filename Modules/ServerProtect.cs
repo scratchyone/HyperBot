@@ -96,6 +96,38 @@ namespace HyperBot.Modules
                 }
             }
         }
+        [Command("savehash")]
+        [RequireOwner]
+        public async Task SaveHash(CommandContext ctx, string hash, [RemainingText] string description)
+        {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                var alreadyInDb = _context.UnsafeFiles.Where(sp => sp.Hash == hash).SingleOrDefault();
+                if (alreadyInDb != null)
+                {
+                    _context.Remove(alreadyInDb);
+                    await _context.AddAsync(new ServerProtectUnsafeFile
+                    {
+                        Description = description,
+                        Hash = hash
+                    });
+                    await _context.SaveChangesAsync();
+                    await ctx.RespondAsync(Embeds.Success.WithDescription($"Updated hash ({hash}) in the database!"));
+
+                }
+                else
+                {
+                    await (_context.AddAsync(new ServerProtectUnsafeFile
+                    {
+                        Description = description,
+                        Hash = hash
+                    }));
+                    await _context.SaveChangesAsync();
+                    await ctx.RespondAsync(Embeds.Success.WithDescription($"Saved hash ({hash}) to the database!"));
+                }
+            }
+        }
+
         [Command("saveipgrabbers")]
         [RequireOwner]
         public async Task SaveIPGrabbers(CommandContext ctx, [RemainingText] string domainsString)
