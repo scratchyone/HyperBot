@@ -203,7 +203,7 @@ namespace HyperBot.Modules
                         .WithEmbed(Embeds.Warning.WithTitle("Warning! Unsafe File Detected!")
                         .WithDescription($"The previous (now deleted) message by {message.Author.Mention} contains a link that points to an unsafe file.")
                         .AddField("Description", found.Description)
-                        .WithFooter("Protected by ServerProtect")));
+                        .WithFooter($"Protected by ServerProtect\nSHA256: {found.Hash}")));
                 }
             }
             return;
