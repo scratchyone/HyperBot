@@ -225,7 +225,18 @@ namespace HyperBot.Modules
                                 // Begin ServerProtect scans
                                 Regex urlParser = new Regex(@"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
                                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                                var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value);
+                                var urls = urlParser.Matches(args.Message.Content).Select(m => m.Value).ToList();
+                                foreach (var embed in args.Message.Embeds)
+                                {
+                                    if (embed.Image != null)
+                                    {
+                                        urls.Add(embed.Image.Url.ToString());
+                                    }
+                                    if (embed.Thumbnail != null)
+                                    {
+                                        urls.Add(embed.Thumbnail.Url.ToString());
+                                    }
+                                }
                                 foreach (var url in urls)
                                 {
                                     var alreadyTriggeredIPGrabberWarning = false;
