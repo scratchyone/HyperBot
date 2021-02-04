@@ -237,6 +237,7 @@ namespace HyperBot.Modules
                                         urls.Add(embed.Thumbnail.Url.ToString());
                                     }
                                 }
+                                urls = urls.Distinct().ToList();
                                 foreach (var url in urls)
                                 {
                                     var alreadyTriggeredIPGrabberWarning = false;
