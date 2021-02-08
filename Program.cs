@@ -170,6 +170,7 @@ namespace HyperBot
         [Command("flag"), Aliases("vflag")]
         public async Task VFlag(CommandContext ctx, [RemainingText] string colors)
         {
+            if (colors.Length == 0) throw new UserError("You must pass a space seperated list of hex colors to this command");
             var colorsList = new List<String>(colors.Split(" "));
             var scaleFactor = 200;
             var targetWidth = 5 * scaleFactor;
@@ -186,6 +187,7 @@ namespace HyperBot
         [Command("hflag")]
         public async Task HFlag(CommandContext ctx, [RemainingText] string colors)
         {
+            if (colors.Length == 0) throw new UserError("You must pass a space seperated list of hex colors to this command");
             var colorsList = new List<String>(colors.Split(" "));
             var scaleFactor = 200;
             var targetWidth = 5 * scaleFactor;
