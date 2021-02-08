@@ -19,7 +19,6 @@ using DSharpPlus.Interactivity.Extensions;
 using System.Timers;
 using System.Collections.Generic;
 using ImageMagick;
-
 namespace HyperBot
 {
     class Program
@@ -172,6 +171,44 @@ namespace HyperBot
         {
             if (colors.Length == 0) throw new UserError("You must pass a space seperated list of hex colors to this command");
             var colorsList = new List<String>(colors.Split(" "));
+            var builtInFlags = new[] { new FlagPreset {
+                    // Trans
+                    RoughColors = new[] {"blue", "pink", "white", "pink", "blue"},
+                    PreciseColors = new[] { "#55CDFC", "#F7A8B8", "#FFFFFF", "#F7A8B8", "#55CDFC" }
+                },
+                new FlagPreset {
+                    // Bisexual
+                    RoughColors = new[] {"pink", "pink", "purple", "blue", "blue"},
+                    PreciseColors = new[] { "#D60270", "#D60270", "#9B4F96", "#0038A8", "#0038A8" }
+                },
+                new FlagPreset {
+                    // Bisexual
+                    RoughColors = new[] {"pink", "purple", "blue"},
+                    PreciseColors = new[] { "#D60270", "#D60270", "#9B4F96", "#0038A8", "#0038A8" }
+                },
+                new FlagPreset {
+                    // Non-binary
+                    RoughColors = new[] {"yellow", "white", "purple", "black"},
+                    PreciseColors = new[] { "#FFF430", "#FFFFFF", "#9C59D1", "#000000" }
+                },
+                new FlagPreset {
+                    // Pansexual
+                    RoughColors = new[] {"pink", "yellow", "blue"},
+                    PreciseColors = new[] { "#FF1B8D", "#FFDA00", "#1BB3FF" }
+                },
+                new FlagPreset {
+                    // Asexual
+                    RoughColors = new[] {"black", "grey", "white", "purple"},
+                    PreciseColors = new[] { "#000000", "#A4A4A4", "#FFFFFF", "#810081" }
+                },
+                new FlagPreset {
+                    // Asexual
+                    RoughColors = new[] {"black", "gray", "white", "purple"},
+                    PreciseColors = new[] { "#000000", "#A4A4A4", "#FFFFFF", "#810081" }
+                }
+            }.ToList();
+            var matchingBuiltInFlag = builtInFlags.Where(f => String.Join(" ", f.RoughColors).ToLower() == colors).FirstOrDefault();
+            if (matchingBuiltInFlag != null) colorsList = matchingBuiltInFlag.PreciseColors.ToList();
             var scaleFactor = 200;
             var targetWidth = 5 * scaleFactor;
             var targetHeight = 3 * scaleFactor;
