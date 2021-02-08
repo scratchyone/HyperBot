@@ -21,38 +21,58 @@ namespace HyperBot.Modules
             var colorsList = new List<String>(colors.Split(" "));
             var builtInFlags = new[] { new FlagPreset {
                     // Trans
-                    RoughColors = new[] {"blue", "pink", "white", "pink", "blue"},
+                    RoughColors = new[] { "blue", "pink", "white", "pink", "blue" },
                     PreciseColors = new[] { "#55CDFC", "#F7A8B8", "#FFFFFF", "#F7A8B8", "#55CDFC" }
                 },
                 new FlagPreset {
                     // Bisexual
-                    RoughColors = new[] {"pink", "pink", "purple", "blue", "blue"},
+                    RoughColors = new[] { "pink", "pink", "purple", "blue", "blue" },
                     PreciseColors = new[] { "#D60270", "#D60270", "#9B4F96", "#0038A8", "#0038A8" }
                 },
                 new FlagPreset {
                     // Bisexual
-                    RoughColors = new[] {"pink", "purple", "blue"},
+                    RoughColors = new[] { "pink", "purple", "blue" },
                     PreciseColors = new[] { "#D60270", "#D60270", "#9B4F96", "#0038A8", "#0038A8" }
                 },
                 new FlagPreset {
                     // Non-binary
-                    RoughColors = new[] {"yellow", "white", "purple", "black"},
+                    RoughColors = new[] { "yellow", "white", "purple", "black" },
                     PreciseColors = new[] { "#FFF430", "#FFFFFF", "#9C59D1", "#000000" }
                 },
                 new FlagPreset {
                     // Pansexual
-                    RoughColors = new[] {"pink", "yellow", "blue"},
+                    RoughColors = new[] { "pink", "yellow", "blue" },
                     PreciseColors = new[] { "#FF1B8D", "#FFDA00", "#1BB3FF" }
                 },
                 new FlagPreset {
                     // Asexual
-                    RoughColors = new[] {"black", "grey", "white", "purple"},
+                    RoughColors = new[] { "black", "grey", "white", "purple" },
                     PreciseColors = new[] { "#000000", "#A4A4A4", "#FFFFFF", "#810081" }
                 },
                 new FlagPreset {
                     // Asexual
                     RoughColors = new[] {"black", "gray", "white", "purple"},
                     PreciseColors = new[] { "#000000", "#A4A4A4", "#FFFFFF", "#810081" }
+                },
+                new FlagPreset {
+                    // Aromantic
+                    RoughColors = new[] { "green", "green", "white", "gray", "black" },
+                    PreciseColors = new[] { "#3AA63F", "#A8D47A", "#FFFFFF", "#AAAAAA", "#000000" }
+                },
+                new FlagPreset {
+                    // Aromantic
+                    RoughColors = new[] { "green", "green", "white", "grey", "black" },
+                    PreciseColors = new[] { "#3AA63F", "#A8D47A", "#FFFFFF", "#AAAAAA", "#000000" }
+                },
+                new FlagPreset {
+                    // MLM
+                    RoughColors = new[] { "green", "green", "green", "white", "blue", "blue", "blue" },
+                    PreciseColors = new[] { "#078d70", "#27ceaa", "#98e8cl", "#ffffff", "#ffffff", "#5049cc", "#3d1a78" }
+                },
+                new FlagPreset {
+                    // Lesbian
+                    RoughColors = new[] { "orange", "orange", "white", "pink", "pink" },
+                    PreciseColors = new[] { "#D62900", "#FF9B55", "#FFFFFF", "#D461A6", "#A50062" }
                 }
             }.ToList();
             var matchingBuiltInFlag = builtInFlags.Where(f => String.Join(" ", f.RoughColors).ToLower() == colors).FirstOrDefault();
