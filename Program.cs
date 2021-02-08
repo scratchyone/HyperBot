@@ -17,6 +17,8 @@ using Microsoft.EntityFrameworkCore;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using System.Timers;
+using System.Collections.Generic;
+using ImageMagick;
 
 namespace HyperBot
 {
@@ -163,8 +165,41 @@ namespace HyperBot
         public async Task Invite(CommandContext ctx)
         {
             await ctx.RespondAsync(ctx.Client.CreateInvite());
-
         }
+
+        [Command("flag"), Aliases("vflag")]
+        public async Task VFlag(CommandContext ctx, [RemainingText] string colors)
+        {
+            var colorsList = new List<String>(colors.Split(" "));
+            var scaleFactor = 200;
+            var targetWidth = 5 * scaleFactor;
+            var targetHeight = 3 * scaleFactor;
+            using (var images = new MagickImageCollection())
+            {
+                foreach (var color in colorsList)
+                    images.Add(new MagickImage(new MagickColor(color), targetWidth, targetHeight / colorsList.Count));
+                var output = images.AppendVertically();
+                output.Format = MagickFormat.Png;
+                await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().WithFile("file.png", new MemoryStream(output.ToByteArray())));
+            }
+        }
+        [Command("hflag")]
+        public async Task HFlag(CommandContext ctx, [RemainingText] string colors)
+        {
+            var colorsList = new List<String>(colors.Split(" "));
+            var scaleFactor = 200;
+            var targetWidth = 5 * scaleFactor;
+            var targetHeight = 3 * scaleFactor;
+            using (var images = new MagickImageCollection())
+            {
+                foreach (var color in colorsList)
+                    images.Add(new MagickImage(new MagickColor(color), targetWidth / colorsList.Count, targetHeight));
+                var output = images.AppendHorizontally();
+                output.Format = MagickFormat.Png;
+                await ctx.Channel.SendMessageAsync(new DiscordMessageBuilder().WithFile("file.png", new MemoryStream(output.ToByteArray())));
+            }
+        }
+
     }
 
 }
