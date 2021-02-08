@@ -67,7 +67,7 @@ namespace HyperBot.Modules
                 new FlagPreset {
                     // MLM
                     RoughColors = new[] { "green", "green", "green", "white", "blue", "blue", "blue" },
-                    PreciseColors = new[] { "#078d70", "#27ceaa", "#98e8cl", "#ffffff", "#ffffff", "#5049cc", "#3d1a78" }
+                    PreciseColors = new[] { "#078d70", "#27ceaa", "#98e8c1", "#ffffff", "#7bade2", "#5049cc", "#3d1a78" }
                 },
                 new FlagPreset {
                     // Lesbian
